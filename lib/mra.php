@@ -3,6 +3,8 @@
 
 // some great, recursive, tree functions, look inside for licenses
 require "vanZon.php";
+// the php-markdown library
+require "markdown.php";
 require "mra-func.php";
 
 //------------------------- decide if in testing mode or not
@@ -220,11 +222,9 @@ class Page {
 		if ($this->title[0] == "#") {
 			$this->title = substr($this->title, 1);
 		}
-		$command = 'markdown ';
-		$command .= escapeshellarg($this->path);
-		$output = array();
-		exec($command, $output);
-		$this->content = implode($output, PHP_EOL);
+
+		$data = file_get_contents($this->path);		
+		$this->content = Markdown($data);
 
 		$dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);
 		

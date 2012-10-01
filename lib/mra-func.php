@@ -121,8 +121,10 @@ function parseHeader($data) {
 			$part = explode('=', $arr);
 			$key = trim($part[0]);
 			$value = trim($part[1]);
-			$result[$key] = $value;
-			echo "$key = $value\n";
+			if (($key != "") && ($value != "")) {
+				$result[$key] = $value;
+				echo "$key = $value\n";
+			}
 		}
 	}
 	return $result;
