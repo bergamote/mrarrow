@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Gtk2;
+
+
+Gtk2->init;
+my $deco = "--===--";
+
+my $window = Gtk2::Window->new;
+my $vbox   = Gtk2::VBox->new;
+my $label  = Gtk2::Label->new($deco);
+my $label2  = Gtk2::Label->new($deco);
+my $updateButton = Gtk2::Button->new("Update");
+my $optButton = Gtk2::Button->new("Options");
+my $quitButton = Gtk2::Button->new("Quit");
+
+
+$window->add($vbox);
+$vbox->add($label);
+$vbox->add($updateButton);
+$vbox->add($label2);
+#$vbox->add($optButton);
+$vbox->add($quitButton);
+
+$window->set_default_size(100, 142);
+$window->set_position('center');
+$window->set_opacity(0.6);
+$window->set_title('arrow');
+$window->set_icon(Gtk2::Gdk::Pixbuf->new_from_file("dev/arrow.png"));
+$window->signal_connect(
+    destroy => sub {
+        Gtk2->main_quit;
+    }
+);
+
+my $i = 0;
+$updateButton->signal_connect(
+    clicked => sub {
+				$label->set_text("Updating...");
+				system("php dev/mra.php");
+				if ( $? == -1 )
+				{
+					print "command failed: $!\n";
+					$label->set_text("Error!");
+				}
+				else
+				{
+					printf "MrA site succesfully updated (exit code = %d )\n", $? >> 8;
+	        $label->set_text("--" . ++$i . "--");
+				}
+    }
+);
+$quitButton->signal_connect(
+    clicked => sub {
+        Gtk2->main_quit;
+    }
+);
+
+
+$window->show_all;
+$window->set_keep_above($window);
+Gtk2->main;
+
+#
+# command line for updating updating with lftp
+#
+#if [ $# -gt 0  ]; then
+#if [ $1 = update ] ; then
+#	echo "### Uploading site"
+#	lftp -f _dev/lftp.conf
+#fi
+#fi
+
