@@ -69,7 +69,7 @@ if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.m
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
 }
 // if not empty
-echo "Copy other files:".PHP_EOL;
+echo "Copy files (if modified):".PHP_EOL;
 foreach ($cpfiles as $v) {
 		$file_part = pathinfo($v);		
 		$dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);	
@@ -77,7 +77,9 @@ foreach ($cpfiles as $v) {
 		$dest_path = stripNumPath($dest_path, true);
 		$dest_path = $site['export_dir'].$dest_path.$file_part['basename'];
 		echo "  $v -> $dest_path".PHP_EOL;
-		exec('cp -f '.escapeshellarg($v).' '.$dest_path);
+		if(exec('cp -fu --preserve=timestamps '.escapeshellarg($v).' '.$dest_path)) {
+			echo "  $v -> $dest_path".PHP_EOL;		
+		}
 }
 // fi
 echo PHP_EOL;
