@@ -52,9 +52,7 @@ $tree = explodeTree($files, "/", true);
 ksortTree($tree);
 //print_r($tree);
 
-if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
-		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
-}
+
 $menu = array(); 
 $menu = makeMenu($tree[$site['content_dir']]);
 $menu = stripNumTree($menu, 'both');
@@ -67,7 +65,11 @@ plotSite($tree);
 echo "Compress assets: css ";
 compThemeFile('style.css', $site);
 echo "- javascript".PHP_EOL;
-compThemeFile('script.js', $site); 
+compThemeFile('script.js', $site);
+
+if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
+		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
+}
 // if not empty
 echo "Copy other files:".PHP_EOL;
 foreach ($cpfiles as $v) {
