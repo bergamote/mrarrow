@@ -7,25 +7,18 @@
 #  then echo $?
 #  else echo "No name entered"
 #fi
-
-
-#./Dev/widget
-
 php lib/mra.php
-
 ### command line for uploading to remot host
-
 if [ $# -gt 0  ]; then
 if [ $1 = upload ] ; then
 	echo "### Uploading site"
 	### by ftp
 	#lftp -f _dev/lftp.conf
 	### with rsync
-	rsync -vrc --progress --stats -e ssh --delete ./Export/ berg@192.168.0.103:/httpdocs/mrarrow/
+	rsync -vrc --progress --stats -e ssh --delete /httpdocs/mrarrow/ berg@192.168.0.103:/httpdocs/mrarrow/
 fi
 if [ $1 = widget ] ; then
 	echo "### Starting Mr Arrow widget"
-	./dev/widget
+	./lib/widget
 fi
 fi
-

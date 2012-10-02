@@ -123,7 +123,7 @@ function parseHeader($data) {
 			$value = trim($part[1]);
 			if (($key != "") && ($value != "")) {
 				$result[$key] = $value;
-				echo "$key = $value\n";
+				echo "  $key = $value\n";
 			}
 		}
 	}
@@ -133,6 +133,3 @@ function parseHeader($data) {
 
 
 ?>
-
-
-

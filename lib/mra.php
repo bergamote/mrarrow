@@ -1,12 +1,10 @@
 <?php 
 //MISTER ARROW
-
 // some great, recursive, tree functions, look inside for licenses
 require "vanZon.php";
 // the php-markdown library
 require "markdown.php";
 require "mra-func.php";
-
 //------------------------- decide if in testing mode or not
 $deploy = 1;
 $test_trail = "index.html";
@@ -18,7 +16,7 @@ $copy_list = array();
 $site = array();
 $conf_file = getcwd()."/site.conf";
 if (file_exists($conf_file)) {
-	echo "Reading the site.conf file.".PHP_EOL;
+	echo "Reading site.conf.".PHP_EOL;
 	$conf = file_get_contents($conf_file);
 	$site = parseHeader($conf);
 } else {
@@ -37,7 +35,7 @@ $default_site = array (
 foreach ($default_site as $key => $val) {
 	if (!isset($site[$key])) {
 		$site[$key] = $val;
-		echo "default: $key = $val".PHP_EOL;
+		echo "  default: $key = $val".PHP_EOL;
 	}
 }
 
@@ -55,7 +53,7 @@ ksortTree($tree);
 //print_r($tree);
 
 $menu = array(); 
-echo "making menu".PHP_EOL;
+//echo "making menu".PHP_EOL;
 $menu = makeMenu($tree[$site['content_dir']]);
 //print_r($menu);
 $menu = stripNumTree($menu, 'both');
@@ -111,10 +109,9 @@ function makeMenu($array=false)
     if(!in_array($nice_name[0], $skipers) && ($v != "")) {
 			$add_key = $file_part['basename'];
 		  $newArr[$add_key] = makeMenu($v);
-			echo $add_key.PHP_EOL;
+			//echo "  ".$add_key.PHP_EOL;
 		}
   }
-	print_r($newArr);
   return $newArr;
 }
 

@@ -162,5 +162,3 @@ function plotTree($arr, $indent=0, $mother_run=true){
 
 
 ?>
-
-
