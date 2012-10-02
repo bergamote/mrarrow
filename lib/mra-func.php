@@ -90,21 +90,12 @@ function stripNumPath($path, $hash=false) {
 }
 
 
-//----------------------------------- Link files (Temporary, maybe for Test folder)
-function linkThemeFile($file, $site){
-$target = getcwd()."/".$site['dev_dir']."/theme/".$site['theme']."/$file";
-$link = $site['export_dir']."/$file";
-	if ((!file_exists($link)) && (file_exists($target))) {
-		symlink($target, $link);
-		echo readlink($link).PHP_EOL;
-	}
-}
-
 function compThemeFile($file, $site) {
 $target = $site['theme_dir']."/".$site['theme']."/$file";
 $comp = $site['export_dir']."/$file";
 if (file_exists($target)) {
 	exec("yui-compressor ".escapeshellarg($target)." > ".escapeshellarg($comp));
+	echo "YUIed $file".PHP_EOL;
 	}
 }
 

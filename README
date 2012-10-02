@@ -10,7 +10,7 @@ The text files are then processed trough Markdown and a template php file from t
 Generate/update the website based on the settings in ./site.conf:
   ./arrow
 
-Generate/update the website, then start the widget (a button to easily update changes):
+Same, but when done start the widget (a button to easily update changes):
   ./arrow widget
   
 

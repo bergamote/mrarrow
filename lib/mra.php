@@ -27,7 +27,7 @@ if (file_exists($conf_file)) {
 $default_site = array (
 	'name' => 'My new site',
 	'tagline' => 'Just another Mr Arrow website',
-	'theme' => 'Quiver',
+	'theme' => 'none',
 	'theme_dir' => 'themes',
 	'content_dir' => 'content',
 	'export_dir' => 'export',
@@ -60,11 +60,9 @@ $menu = stripNumTree($menu, 'both');
 
 plotSite($tree);
 
-//	Dealing with "other" files (compressing css, js and 
-//	making a list of everything else to copy)
-echo "Compress assets: css ";
+//	Dealing with "other" files (compressing css and js from theme folder; 
+//	copy everything else)
 compThemeFile('style.css', $site);
-echo "- javascript".PHP_EOL;
 compThemeFile('script.js', $site);
 
 if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
@@ -230,8 +228,12 @@ class Page {
 		
 		exec("mkdir -p ".escapeshellarg($dest_path));
 		$dest_path .= "/index.html";
+		$template = $site['dev_dir'].'/default_template.php';
+		if ( ($site['theme'] != 'none') && is_dir($site['theme_dir']."/".$site['theme']) ) {
+			$template = $site['theme_dir']."/".$site['theme']."/default.php";
+		}
 		ob_start();
-		include $site['theme_dir']."/".$site['theme']."/default.php";
+		include $template;
 		file_put_contents($dest_path, ob_get_contents());
 		ob_end_clean();
 		echo PHP_EOL;
