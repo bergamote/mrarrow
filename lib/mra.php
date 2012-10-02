@@ -40,9 +40,9 @@ foreach ($default_site as $key => $val) {
 }
 
 
-//------------------------- turn content directory into a tree
+//------------------------- turn markdown content into a tree
 
-if(exec("find ".getcwd()."/".$site['content_dir'] , $files)){
+if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"' , $files)){
 		$files = substr_replace($files, "", 0, ( strlen(getcwd()) +1) );
     $files = array_combine(array_values($files), array_values($files));
 }
@@ -52,28 +52,32 @@ $tree = explodeTree($files, "/", true);
 ksortTree($tree);
 //print_r($tree);
 
+if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
+		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
+}
 $menu = array(); 
-//echo "making menu".PHP_EOL;
 $menu = makeMenu($tree[$site['content_dir']]);
-//print_r($menu);
 $menu = stripNumTree($menu, 'both');
 //print_r($menu);
 
 plotSite($tree);
 
-echo PHP_EOL;
-
 //	Dealing with "other" files (compressing css, js and 
 //	making a list of everything else to copy)
-echo "compress: css ";
+echo "Compress assets: css ";
 compThemeFile('style.css', $site);
-echo "- javscript".PHP_EOL;
+echo "- javascript".PHP_EOL;
 compThemeFile('script.js', $site); 
 // if not empty
-echo "copy: ";
-foreach ($copy_list as $k=>$v) {
-	echo substr($v, (strlen($site['export_dir']) + 1))." ";
-	exec('cp -f '.escapeshellarg($k).' '.$v);
+echo "Copy other files:".PHP_EOL;
+foreach ($cpfiles as $v) {
+		$file_part = pathinfo($v);		
+		$dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);	
+		$dest_path = sane($dest_path.'/');
+		$dest_path = stripNumPath($dest_path, true);
+		$dest_path = $site['export_dir'].$dest_path.$file_part['basename'];
+		echo "  $v -> $dest_path".PHP_EOL;
+		exec('cp -f '.escapeshellarg($v).' '.$dest_path);
 }
 // fi
 echo PHP_EOL;
@@ -156,48 +160,36 @@ function plotMenu($arr, $rel, $indent=2){
 function plotSite($arr, $indent=0, $mother_run=true){
     if($mother_run){
         // the beginning of plotTree. We're at rootlevel
-        echo "start\n";
+        echo "Start\n";
     }
  
     foreach($arr as $k=>$v){
         // skip the baseval and _prefixed filenames.
         if(($k == "__base_val") || ($k[0] == "_")) continue;
         // determine the real value of this node.
-        $show_val = ( is_array($v) ? $v["__base_val"] : $v );
-
+        //$show_val = ( is_array($v) ? $v["__base_val"] : $v );
+				$show_val = ( is_array($v) ? $k : $v );
         //echo str_repeat("  ", $indent);
         if($indent == 0){
             // this is a root node. no parents
-            echo "O Create site".PHP_EOL;
+            //echo "O Create site".PHP_EOL;
         } elseif(is_array($v)){
             // this is a normal node. parents and children
-            echo "+ New category $k".PHP_EOL;
+            echo "  Category $k".PHP_EOL;
         } elseif(!is_dir($show_val)) {
             // this is a leaf node. no children
-
-					$ext = pathinfo($show_val, PATHINFO_EXTENSION);
-					$ext_markdown = ["txt", "md", "markdown"];				// text files get the markdown treatment
-					if (in_array($ext, $ext_markdown)) {
 						global $page;
 						$page = new Page;
 						$page->path = $show_val;
 						$page->makePage();
-					} else {																					// everything else gets added to the copy list
-						global $copy_list;
-						global $site;
-						$value = sane(stripNumPath($show_val));
-						$copy_list[$show_val] = $site['export_dir'].substr($value, mb_strlen($site['content_dir']));
-					}
         }
- 
         if(is_array($v)){
             // this is what makes it recursive, rerun for childs
             plotSite($v, ($indent+1), false);
         }
     }
- 
     if($mother_run){
-        echo "end\n";
+        echo "End\n";
     }
 }
 
@@ -212,7 +204,7 @@ class Page {
 	public $menu_li;
 	public function makePage(){
 		global $site, $page;
-		echo "- making page: ".$this->path;
+		echo "  + ".$this->path;
 
 		$file_part = pathinfo($this->path);
 		$this->title = stripNum($file_part['filename']); 
@@ -240,7 +232,7 @@ class Page {
 		include $site['theme_dir']."/".$site['theme']."/default.php";
 		file_put_contents($dest_path, ob_get_contents());
 		ob_end_clean();
-		echo " 'done".PHP_EOL;
+		echo PHP_EOL;
 	}
 }
 
