@@ -1,10 +1,13 @@
 <?php 
 //MISTER ARROW
+
 // some great, recursive, tree functions, look inside for licenses
 require "vanZon.php";
+
 // the php-markdown library
 require "markdown.php";
 require "mra-func.php";
+
 //------------------------- decide if in testing mode or not
 $deploy = 1;
 $test_trail = "index.html";
@@ -12,6 +15,7 @@ if ($deploy == 1){
 $test_trail = "";
 }
 $copy_list = array();
+
 //------------------------- store site.conf settings into $site array
 $site = array();
 $conf_file = getcwd()."/site.conf";
@@ -39,7 +43,6 @@ foreach ($default_site as $key => $val) {
 	}
 }
 
-
 //------------------------- turn markdown content into a tree
 
 if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"' , $files)){
@@ -62,26 +65,26 @@ plotSite($tree);
 
 //	Dealing with "other" files (compressing css and js from theme folder; 
 //	copy everything else)
-compThemeFile('style.css', $site);
-compThemeFile('script.js', $site);
+echo "yui-compressor => style.css".PHP_EOL;
+catCompYUI("css", $site);
+echo "yui-compressor => script.js".PHP_EOL;
+catCompYUI("js", $site);
 
 if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
 }
-// if not empty
-echo "Copy files (if modified):".PHP_EOL;
-foreach ($cpfiles as $v) {
+if(!empty($cpfiles)) {
+	echo "Copy files (if modified):".PHP_EOL;
+	foreach ($cpfiles as $v) {
 		$file_part = pathinfo($v);		
 		$dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);	
 		$dest_path = sane($dest_path.'/');
 		$dest_path = stripNumPath($dest_path, true);
 		$dest_path = $site['export_dir'].$dest_path.$file_part['basename'];
-		echo "  $v -> $dest_path".PHP_EOL;
-		if(exec('cp -fu --preserve=timestamps '.escapeshellarg($v).' '.$dest_path)) {
-			echo "  $v -> $dest_path".PHP_EOL;		
-		}
+		exec('cp -fuv --preserve=timestamps '.escapeshellarg($v).' '.$dest_path);
+		echo "  $v -> $dest_path".PHP_EOL;		
+	}
 }
-// fi
 echo PHP_EOL;
 
 ##################################################### MAIN FUNCTIONS
@@ -167,9 +170,8 @@ function plotSite($arr, $indent=0, $mother_run=true){
  
     foreach($arr as $k=>$v){
         // skip the baseval and _prefixed filenames.
-        if(($k == "__base_val") || ($k[0] == "_")) continue;
+        if($k[0] == "_") continue;
         // determine the real value of this node.
-        //$show_val = ( is_array($v) ? $v["__base_val"] : $v );
 				$show_val = ( is_array($v) ? $k : $v );
         //echo str_repeat("  ", $indent);
         if($indent == 0){

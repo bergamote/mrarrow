@@ -89,14 +89,14 @@ function stripNumPath($path, $hash=false) {
 	return $path;
 }
 
-
-function compThemeFile($file, $site) {
-$target = $site['theme_dir']."/".$site['theme']."/$file";
-$comp = $site['export_dir']."/$file";
-if (file_exists($target)) {
-	exec("yui-compressor ".escapeshellarg($target)." > ".escapeshellarg($comp));
-	echo "YUIed $file".PHP_EOL;
-	}
+function catCompYUI($ext, $site) {
+  $pathIn = escapeshellarg($site['theme_dir']."/".$site['theme']."/");
+  $pathOut = escapeshellarg($site['export_dir']."/"); 
+  $filename = ( $ext=="css" ? "style.css" : "script.js" );
+	
+  exec ("cat $pathIn*.$ext > tmp.$ext");
+	exec ("yui-compressor tmp.".$ext." > ".$site['export_dir']."/".$filename);
+	exec ("rm tmp.".$ext);
 }
 
 //----------------------------------- Extract the header
