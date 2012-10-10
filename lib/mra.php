@@ -3,10 +3,19 @@
 
 // some great, recursive, tree functions, look inside for licenses
 require "vanZon.php";
-
 // the php-markdown library
 require "markdown.php";
 require "mra-func.php";
+
+//------------------------- The default settings
+$default_site = array (
+	'name' => 'My new site',
+	'tagline' => 'Just another Mr Arrow website',
+	'theme' => 'none',
+	'theme_dir' => 'theme',
+	'content_dir' => 'content',
+	'export_dir' => 'export',
+	'dev_dir' => 'lib');
 
 //------------------------- decide if in testing mode or not
 $deploy = 1;
@@ -14,7 +23,6 @@ $test_trail = "index.html";
 if ($deploy == 1){
 $test_trail = "";
 }
-$copy_list = array();
 
 //------------------------- store site.conf settings into $site array
 $site = array();
@@ -27,21 +35,13 @@ if (file_exists($conf_file)) {
 	echo "No site.conf file.".PHP_EOL;
 }
 
-//------------------------- some minimum default setting
-$default_site = array (
-	'name' => 'My new site',
-	'tagline' => 'Just another Mr Arrow website',
-	'theme' => 'none',
-	'theme_dir' => 'themes',
-	'content_dir' => 'content',
-	'export_dir' => 'export',
-	'dev_dir' => 'lib');
 foreach ($default_site as $key => $val) {
 	if (!isset($site[$key])) {
 		$site[$key] = $val;
-		echo "  default: $key = $val".PHP_EOL;
+		echo "  -- $key = $val".PHP_EOL;
 	}
 }
+$copy_list = array();
 
 //------------------------- turn markdown content into a tree
 
@@ -81,7 +81,7 @@ if(!empty($cpfiles)) {
 		$dest_path = sane($dest_path.'/');
 		$dest_path = stripNumPath($dest_path, true);
 		$dest_path = $site['export_dir'].$dest_path.$file_part['basename'];
-		exec('cp -fuv --preserve=timestamps '.escapeshellarg($v).' '.$dest_path);
+		exec('cp -fu --preserve=timestamps '.escapeshellarg($v).' '.$dest_path);
 		echo "  $v -> $dest_path".PHP_EOL;		
 	}
 }
