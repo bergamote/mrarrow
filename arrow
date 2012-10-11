@@ -1,24 +1,28 @@
-#!/bin/bash
+#!/usr/bin/php
+<?php
+if (!isset($argv[1])){
+	passthru('php lib/mra.php');
+	exit(0);
+} else {
+	switch($argv[1]) {
+		case "new": passthru('php ./lib/mra-new.php'); break;
+		case "upload": echo "upload site to remote directory"; break;
+		case "widget":
+			echo "Start widget".PHP_EOL;
+			passthru('./lib/widget');
+			break;
+		default:
+echo <<<EOD
+Invalid command: $argv[1]
+Usage: ./arrow [command]
+./arrow           Build the website to the export folder.
+        new       Create a site.conf file and the default folders.
+        widget    Start the update widget.
+        upload    Run an update and upload the result to a remote folder.
 
-#if zenity --entry \
-#--title="Create a Site" \
-#--text="Enter name of new site:" \
-#--entry-text "My Site"
-#  then echo $?
-#  else echo "No name entered"
-#fi
-php lib/mra.php
-### command line for uploading to remot host
-if [ $# -gt 0  ]; then
-if [ $1 = upload ] ; then
-	echo "### Uploading site"
-	### by ftp
-	#lftp -f _dev/lftp.conf
-	### with rsync
-	rsync -vrc --progress --stats -e ssh --delete /httpdocs/mrarrow/ berg@192.168.0.103:/httpdocs/mrarrow/
-fi
-if [ $1 = widget ] ; then
-	echo "### Starting Mr Arrow widget"
-	./lib/widget
-fi
-fi
+EOD;
+	}
+	exit(0);
+}
+?>
+
