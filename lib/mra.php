@@ -2,20 +2,20 @@
 //MISTER ARROW
 
 // some great, recursive, tree functions, look inside for licenses
-require "vanZon.php";
+require "assets/explodeTree.php";
 // the php-markdown library
-require "markdown.php";
+require "assets/markdown.php";
 require "mra-func.php";
 
-//------------------------- The default settings
+//------------------------- The default settings if not in site.conf
 $default_site = array (
 	'name' => 'My new site',
 	'tagline' => 'Just another Mr Arrow website',
-	'theme' => 'none',
+	'theme' => '',
 	'theme_dir' => 'theme',
 	'content_dir' => 'content',
 	'export_dir' => 'export',
-	'dev_dir' => 'lib');
+	'lib_dir' => 'lib');
 
 //------------------------- decide if in testing mode or not
 $deploy = 1;
@@ -23,6 +23,7 @@ $test_trail = "index.html";
 if ($deploy == 1){
 $test_trail = "";
 }
+$copy_list = array();
 
 //------------------------- store site.conf settings into $site array
 $site = array();
@@ -38,10 +39,16 @@ if (file_exists($conf_file)) {
 foreach ($default_site as $key => $val) {
 	if (!isset($site[$key])) {
 		$site[$key] = $val;
-		echo "  -- $key = $val".PHP_EOL;
+		//echo "  - $key = $val".PHP_EOL;
 	}
 }
-$copy_list = array();
+
+$site['template'] = $site['lib_dir'].'/assets/default.php';
+if ( (!empty($site['theme'])) && is_dir($site['theme_dir']."/".$site['theme']) ) {
+	$site['template'] = $site['theme_dir']."/".$site['theme']."/default.php";
+} elseif (!empty($site['theme'])) {
+	echo "Theme '".$site['theme']."' doesn't exist, using lib/assets/default.php instead.".PHP_EOL;
+}
 
 //------------------------- turn markdown content into a tree
 
@@ -65,11 +72,12 @@ plotSite($tree);
 
 //	Dealing with "other" files (compressing css and js from theme folder; 
 //	copy everything else)
+if (!empty($site['theme'])){
 echo "yui-compressor => style.css".PHP_EOL;
 catCompYUI("css", $site);
 echo "yui-compressor => script.js".PHP_EOL;
 catCompYUI("js", $site);
-
+}
 if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
 }
@@ -232,12 +240,9 @@ class Page {
 		
 		exec("mkdir -p ".escapeshellarg($dest_path));
 		$dest_path .= "/index.html";
-		$template = $site['dev_dir'].'/default_template.php';
-		if ( ($site['theme'] != 'none') && is_dir($site['theme_dir']."/".$site['theme']) ) {
-			$template = $site['theme_dir']."/".$site['theme']."/default.php";
-		}
+
 		ob_start();
-		include $template;
+		include $site['template'];
 		file_put_contents($dest_path, ob_get_contents());
 		ob_end_clean();
 		echo PHP_EOL;

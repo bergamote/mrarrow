@@ -93,10 +93,9 @@ function catCompYUI($ext, $site) {
   $pathIn = escapeshellarg($site['theme_dir']."/".$site['theme']."/");
   $pathOut = escapeshellarg($site['export_dir']."/"); 
   $filename = ( $ext=="css" ? "style.css" : "script.js" );
-	
-  exec ("cat $pathIn*.$ext > tmp.$ext");
-	exec ("yui-compressor tmp.".$ext." > ".$site['export_dir']."/".$filename);
-	exec ("rm tmp.".$ext);
+	passthru("cat $pathIn*.$ext > tmp.$ext");
+	exec("yui-compressor tmp.".$ext." > ".$site['export_dir']."/".$filename);
+	exec("rm tmp.".$ext);
 }
 
 //----------------------------------- Extract the header
