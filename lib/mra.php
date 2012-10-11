@@ -6,6 +6,7 @@ require "assets/explodeTree.php";
 // the php-markdown library
 require "assets/markdown.php";
 require "mra-func.php";
+//require "mra-menu.php";
 
 //------------------------- The default settings if not in site.conf
 $default_site = array (
@@ -33,7 +34,9 @@ if (file_exists($conf_file)) {
 	$conf = file_get_contents($conf_file);
 	$site = parseHeader($conf);
 } else {
-	echo "No site.conf file.".PHP_EOL;
+	echo "No site.conf file found.".PHP_EOL;
+	echo "To create a new website type: ./arrow new".PHP_EOL;
+	exit(1);
 }
 
 foreach ($default_site as $key => $val) {
@@ -50,7 +53,6 @@ if ( (!empty($site['theme'])) && is_dir($site['theme_dir']."/".$site['theme']) )
 	echo "Theme '".$site['theme']."' doesn't exist, using lib/assets/default.php instead.".PHP_EOL;
 }
 
-//------------------------- turn markdown content into a tree
 
 if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"' , $files)){
 		$files = substr_replace($files, "", 0, ( strlen(getcwd()) +1) );

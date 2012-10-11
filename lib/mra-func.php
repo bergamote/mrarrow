@@ -23,11 +23,6 @@ function relativePath($from, $to, $ps = DIRECTORY_SEPARATOR)
 
 
 //---------------------------------- Name sanitizing functions
-function saneo($string) { 
-	$string = strtolower(str_replace(" ", "-", $string));
-	$string = preg_replace('![^/\w-.]!', "", $string);
-	return $string;
-}
 function sane($s) {
   //Convert accented characters, and remove parentheses and apostrophes
   $from = explode (',', "ç,æ,œ,á,é,í,ó,ú,à,è,ì,ò,ù,ä,ë,ï,ö,ü,ÿ,â,ê,î,ô,û,å,e,i,ø,u,(,),[,],'");
