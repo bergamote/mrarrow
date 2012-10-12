@@ -83,14 +83,19 @@ function stripNumPath($path, $hash=false) {
 	}
 	return $path;
 }
-
+//---------------------------- Compress theme's javascript and css with yui-compressor
 function catCompYUI($ext, $site) {
   $pathIn = escapeshellarg($site['theme_dir']."/".$site['theme']."/");
   $pathOut = escapeshellarg($site['export_dir']."/"); 
   $filename = ( $ext=="css" ? "style.css" : "script.js" );
-	passthru("cat $pathIn*.$ext > tmp.$ext");
-	exec("yui-compressor tmp.".$ext." > ".$site['export_dir']."/".$filename);
-	exec("rm tmp.".$ext);
+	exec("ls $pathIn*.$ext 2>&1 1> /dev/null", $output, $ret_val);
+	if($ret_val == 0) {
+		exec("cat $pathIn*.$ext > tmp.$ext");
+		exec("yui-compressor tmp.".$ext." > ".$site['export_dir']."/".$filename);
+		exec("rm tmp.".$ext);
+	} else {
+		echo "No .$ext files found in $site[theme].".PHP_EOL;
+	}
 }
 
 //----------------------------------- Extract the header
