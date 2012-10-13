@@ -81,6 +81,7 @@ plotSite($tree);
 if ($yui_sw){
   if(!exec("which yui-compressor")) {
     echo "yui-compressor is not installed.".PHP_EOL;
+    
   } else {
     //echo "yui-compressor => style.css".PHP_EOL;
     catCompYUI("css", $site);
@@ -265,12 +266,28 @@ class Page {
 }
 class Index {
   public $menu_li;
-  
   public function makeIndex(){
-    global $site;
+    global $site, $menu;
     echo "index ".PHP_EOL;
-
-
+    $this->menu_li = makeMenuLi('');
+    $simple_index = <<<EOD
+<!DOCTYPE html>
+<head>
+	<style>
+		body {
+			text-align:center;
+		}
+	</style>
+</head>
+<body>
+<br>
+<h1>$site[name]</h1>
+<nav>
+$this->menu_li
+</nav>
+</body>
+EOD;
+    file_put_contents($site['export_dir']."/index.html", $simple_index);
   }
 }
 exit(0);
