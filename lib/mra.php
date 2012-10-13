@@ -183,6 +183,7 @@ function plotMenu($arr, $rel, $indent=2){
 ####################################----- The website plotting function
 
 function plotSite($arr, $indent=0, $mother_run=true){
+  global $site;
   if($mother_run){
     // the beginning of plotTree. We're at rootlevel
     echo "Start\n";
@@ -203,7 +204,16 @@ function plotSite($arr, $indent=0, $mother_run=true){
       $main_index->makeIndex();
     } elseif(is_array($v)){
       // this is a normal node. parents and children
-      echo "  Category $k".PHP_EOL;
+        // let's check if it's a blog
+      $ls_cmd = "ls $site[content_dir]/".escapeshellarg($show_val).'/';
+      $ls_txt = shell_exec("$ls_cmd | egrep \.txt$");
+      $regex = '^[[:digit:]]{4}[_\ -]?[[:digit:]]{2}[_\ -]?[[:digit:]]{2}.*\.txt$';
+      $ls_pot = shell_exec("$ls_cmd | egrep $regex");
+      if ($ls_txt == $ls_pot) {
+        echo "Woa, looks like we've got ourselves a blog folder!".PHP_EOL;
+      } else {
+        echo "  Category $k".PHP_EOL;
+      }
     } elseif(!is_dir($show_val)) {
       // this is a leaf node. no children
 			global $page;
