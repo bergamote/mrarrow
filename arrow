@@ -9,7 +9,7 @@ if (!isset($argv[1])){
 		case "upload": echo "upload site to remote directory"; break;
 		case "widget":
 			echo "Start widget".PHP_EOL;
-			passthru('./lib/widget');
+			passthru('./lib/mra-widget');
 			break;
 		default:
 echo <<<EOD

@@ -28,7 +28,7 @@ $window->set_default_size(100, 142);
 $window->set_position('center');
 $window->set_opacity(0.6);
 $window->set_title('arrow');
-$window->set_icon(Gtk2::Gdk::Pixbuf->new_from_file("lib/arrow.png"));
+$window->set_icon(Gtk2::Gdk::Pixbuf->new_from_file("lib/assets/arrow.png"));
 $window->signal_connect(
     destroy => sub {
         Gtk2->main_quit;
