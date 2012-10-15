@@ -1,5 +1,18 @@
 <?php
+date_default_timezone_set('UTC');
+//date_default_timezone_set();
+$date_regex = '!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!';
 
+//------------------------- Check if template exists, else go into parent folder
+function set_template($template) {
+  global $site;
+  $good = $site['theme_dir'].$template.'.php';
+  if (is_file($good)) {
+    return $good;
+  } else {
+    return "$site[theme_dir]../$template.php";
+  }
+}
 //------------------------- Find our position relative to root
 function findRel($cur_url) {
 	$rel = "../";	
@@ -33,13 +46,14 @@ function sane($s) {
   return strtolower (preg_replace ('/^-/', '', preg_replace ('/-$/', '', $s)));
 }
 
-
+function stripDate($string) {
+  global $date_regex;
+	$string = preg_replace($date_regex, "", $string);
+	return $string;
+}
 //---------------------------- stripNum : Strip prefixed ordering number
 function stripNum($string) {
 	$string = preg_replace('!^([\d])*\.!', "", $string);
-	//if ($string[0] == ".") {
-	//	$string = substr($string, 1);
-	//}
 	return $string;
 }
 
@@ -84,8 +98,10 @@ function stripNumPath($path, $hash=false) {
 	return $path;
 }
 //---------------------------- Compress theme's javascript and css with yui-compressor
-function catCompYUI($ext, $site) {
-  $pathIn = escapeshellarg($site['theme_dir']."/".$site['theme']."/");
+function catCompYUI($ext) {
+  echo "....";
+  global $site;
+  $pathIn = escapeshellarg($site['theme_dir']);
   $pathOut = escapeshellarg($site['export_dir']."/"); 
   $filename = ( $ext=="css" ? "style.css" : "script.js" );
 	exec("ls $pathIn*.$ext 2>&1 1> /dev/null", $output, $ret_val);
@@ -120,9 +136,12 @@ function parseHeader($data) {
 	return $result;
 }
 //----------------------------------- Check if a folder array is a blog
-function is_blog($array) {
-  $expression = '!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!';
-  $posts = preg_grep($expression , array_keys($array));
-  return (array_keys($array) == $posts) ? true : false;
+function is_blog($who) {
+  global $date_regex;
+  if (is_array($who)) {
+    $posts = preg_grep($date_regex , array_keys($who));
+    return (array_keys($who) == $posts) ? true : false;
+  }
+  return (preg_match($date_regex, $who) == 1) ? true : false;
 }
 ?>

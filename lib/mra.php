@@ -8,6 +8,13 @@ require "assets/markdown.php";
 require "mra-func.php";
 //require "mra-menu.php";
 
+//------------------------- decide if in testing mode or not
+$deploy = 1;
+$test_trail = "index.html";
+if ($deploy == 1){
+$test_trail = "";
+}
+
 //------------------------- The default settings if not in site.conf
 $default_site = array (
   'name' => 'My new site',
@@ -17,15 +24,6 @@ $default_site = array (
   'content_dir' => 'content',
   'export_dir' => 'export',
   'lib_dir' => 'lib');
-
-//------------------------- decide if in testing mode or not
-$deploy = 1;
-$test_trail = "index.html";
-if ($deploy == 1){
-$test_trail = "";
-}
-$copy_list = array();
-
 //------------------------- store site.conf settings into $site array
 $site = array();
 $conf_file = getcwd()."/site.conf";
@@ -38,58 +36,35 @@ if (file_exists($conf_file)) {
   echo "To create a new website type: ./arrow new".PHP_EOL;
   exit(1);
 }
-
 foreach ($default_site as $key => $val) {
   if (!isset($site[$key])) {
     $site[$key] = $val;
-    //echo "  - $key = $val".PHP_EOL;
   }
 }
-
-$site['template'] = $site['lib_dir'].'/assets/default.php';
+//------------------------- Find in which folder to look for templates
 $yui_sw = false;
 if ( (!empty($site['theme'])) && is_dir($site['theme_dir']."/".$site['theme']) ) {
-  $site['template'] = $site['theme_dir']."/".$site['theme']."/default.php";
+  $site['theme_dir'] = $site['theme_dir']."/".$site['theme'];
   $yui_sw = true;
 } elseif (!empty($site['theme'])) {
-  echo "Theme '".$site['theme']."' doesn't exist, using lib/assets/default.php instead.".PHP_EOL;
+  echo "Theme '".$site['theme']."' not found, using default theme.".PHP_EOL;
 }
+$site['theme_dir'] .= (substr($site['theme_dir'], -1) == '/')?:'/';
 
 
-if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"' , $files)){
-  $files = substr_replace($files, "", 0, ( strlen(getcwd()) +1) );
-  $files = array_combine(array_values($files), array_values($files));
-}
 
-$tree = explodeTree($files, "/", true);
-
-ksortTree($tree);
-//print_r($tree);
-
-
-$menu = array(); 
-$menu = makeMenu($tree[$site['content_dir']]);
-$menu = stripNumTree($menu, 'both');
-//print_r($menu);
-
-plotSite($tree);
-
-//	Dealing with "other" files (compressing css and js from theme folder; 
-//	copy everything else)
-
-
+//-------------------------	Compressing css and js from theme folder 
 if ($yui_sw){
   if(!exec("which yui-compressor")) {
     echo "yui-compressor is not installed.".PHP_EOL;
-    
   } else {
-    //echo "yui-compressor => style.css".PHP_EOL;
-    catCompYUI("css", $site);
-    //echo "yui-compressor => script.js".PHP_EOL;
-    catCompYUI("js", $site);
+    echo "yui-compress";
+    catCompYUI("css");
+    catCompYUI("js");
+    echo "done";
   }
 }
-
+//-------------------------	Copy everything else
 if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
 }
@@ -105,7 +80,19 @@ if(!empty($cpfiles)) {
     echo "  $v -> $dest_path".PHP_EOL;		
   }
 }
-echo PHP_EOL;
+//------------------------- Make the site's tree
+if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"' , $files)){
+  $files = substr_replace($files, "", 0, ( strlen(getcwd()) +1) );
+  $files = array_combine(array_values($files), array_values($files));
+}
+$tree = explodeTree($files, "/", true);
+ksortTree($tree);
+
+$menu = array(); 
+$menu = makeMenu($tree[$site['content_dir']]);
+$menu = stripNumTree($menu, 'both');
+
+plotSite($tree);
 
 ##################################################### MAIN FUNCTIONS
 
@@ -145,10 +132,8 @@ function makeMenu($array=false)
   } else {
     $sacrfc = array_shift($array);
     $dest_path = substr_replace(dirname($sacrfc), "", 0, ( strlen($site['content_dir']) +1));
-     echo $dest_path.PHP_EOL;   
     $dest_path = sane(basename($dest_path))."/".$test_trail;
-    echo $dest_path.PHP_EOL;
-       return $dest_path; 
+    return $dest_path; 
   }
 }
 
@@ -207,18 +192,19 @@ function plotSite($arr, $indent=0, $mother_run=true){
       global $index;
       $index = new Index;
       $index->makeIndex();
+      echo " Index : $site[name]".PHP_EOL;
     } elseif(is_array($v)){
       // this is a normal node. parents and children
       // let's check if it's a blog folder
       if (is_blog($v)) {
-        echo "  Blog folder $k".PHP_EOL;
         global $blog;
         $blog = new Blog;
         $blog->posts = $v;
-        $blog->show = $show_val;
+        $blog->title = stripNum($show_val);
         $blog->makeBlog();
+        echo " Blog : ".$show_val.PHP_EOL;
       } else {  // It's not a blog so it's a category
-        echo "  Category $k".PHP_EOL;
+        echo " Category : $k".PHP_EOL;
       }
     } elseif(!is_dir($show_val)) {
       // this is a leaf node. no children
@@ -226,6 +212,7 @@ function plotSite($arr, $indent=0, $mother_run=true){
 			$page = new Page;
 			$page->path = $show_val;
 			$page->makePage();
+			echo "  + ".$show_val.PHP_EOL;
     }
     if(is_array($v)){
       // this is what makes it recursive, rerun for childs
@@ -234,6 +221,7 @@ function plotSite($arr, $indent=0, $mother_run=true){
   }
   if($mother_run){
     echo "End\n";
+    exit(0);
   }
 }
 
@@ -248,23 +236,26 @@ class Page {
   public $menu_li;
   public function makePage(){
     global $site, $page;
-    echo "  + ".$this->path;
-
     $file_part = pathinfo($this->path);
     $this->title = stripNum($file_part['filename']); 
     if ($this->title[0] == "#") {
       $this->title = substr($this->title, 1);
     }
-
+    $this->content = "<article>";
+    if (is_blog($this->title)) {
+      $post = new Post;
+			$post->path = $this->path;
+			$post->title = $this->title;
+			$this->content .= $post->makePost();
+    } else {
     $data = file_get_contents($this->path);		
-    $this->content = Markdown($data);
-
+    $this->content .= Markdown($data); 
+    }
+    $this->content .= "</article>";
     $dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);
 
     $this->rel = findRel(sane($dest_path));
     $this->menu_li = makeMenuLi($this->rel);
-
-    $this->style = $this->rel."style.css";
 
     $dest_path = sane($dest_path.'/'.$this->title);
     $dest_path = stripNumPath($dest_path, true);
@@ -274,26 +265,21 @@ class Page {
     $dest_path .= "/index.html";
 
     ob_start();
-      include $site['template'];
+      include $site['theme_dir'].'default.php';
       file_put_contents($dest_path, ob_get_contents());
     ob_end_clean();
-    echo PHP_EOL;
   }
 }
+
 class Index {
   public $menu_li;
   public function makeIndex(){
     global $site, $menu;
-    echo "index ".PHP_EOL;
     $this->menu_li = makeMenuLi('');
     $simple_index = <<<EOD
 <!DOCTYPE html>
 <head>
-	<style>
-		body {
-			text-align:center;
-		}
-	</style>
+<title>$site[name]</title>
 </head>
 <body>
 <br>
@@ -306,37 +292,66 @@ EOD;
     file_put_contents($site['export_dir']."/index.html", $simple_index);
   }
 }
-exit(0);
 
 class Blog {
   public $title;
   public $content;
+  public $date;
   public $menu_li;
+  
   public function makeBlog(){
     global $site, $menu;
-    echo "blog ".PHP_EOL;
     arsort($this->posts);
-    echo $this->show.PHP_EOL;
-    $this->menu_li = makeMenuLi('../');
-    $blog_roll = "<section>".PHP_EOL;
+    $this->content = "<section>".PHP_EOL;
     foreach ($this->posts as $k=>$v) {
-      $post = file_get_contents($v);
-      $post = Markdown($post);
-      $blog_roll .= "<hr>$post";
+    	$post = new Post;
+			$post->path = $v;
+			$post->title = $k;
+			$this->content .= $post->makePost(true);
     }
-    $blog_roll .= "</section>";
-    $this->content = $blog_roll;
-    $this->title = $this->show;
-    $dest_path = "$site[export_dir]/".sane($this->show);
+    $this->content .= "</section>";
+    $dest_path = "$site[export_dir]/".stripNum(sane($this->title));
     exec("mkdir -p ".escapeshellarg($dest_path));
     $dest_path .= "/index.html";
+    $this->rel = findRel(sane($dest_path));
+    $this->menu_li = makeMenuLi($this->rel);
     ob_start();
-      include $site['template'];
+      include $site['theme_dir'].'default.php';
       file_put_contents($dest_path, ob_get_contents());
     ob_end_clean();
   }
 }
-exit(0);
-?>
-?>
 
+class Post {
+  public $path;
+  public $title;
+  public $content;
+  public $date;
+  public $link;
+  public function makePost($short=false) {
+    global $site, $date_regex, $post;
+    $this->link = sane(pathinfo($this->title, PATHINFO_FILENAME)).'/';
+    preg_match($date_regex, $this->title, $date_ar);
+    $this->date = preg_replace('![_\ -]!','-',sane($date_ar[0]));
+    $this->date = date('l jS \of F Y', strtotime($this->date)).PHP_EOL;
+    $this->title = stripDate(pathinfo($this->title, PATHINFO_FILENAME));
+    $this->content = file_get_contents($this->path);
+    if($short) {
+      $parts = explode('<!--more-->',$this->content);
+      $content = $parts[0];
+      $content .= (empty($parts[1]))?:" - [read more](".$this->link.")";
+      $this->content = Markdown($content);}
+    else {
+      $this->content = Markdown($this->content);
+      $this->link = "../".$this->link;
+    }
+    
+    ob_start();
+      include set_template('post');
+      $this->content = ob_get_contents();
+    ob_end_clean();
+    return $this->content;
+  }
+}
+
+?>
