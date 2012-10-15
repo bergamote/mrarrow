@@ -119,7 +119,10 @@ function parseHeader($data) {
 	}
 	return $result;
 }
-
-
-
+//----------------------------------- Check if a folder array is a blog
+function is_blog($array) {
+  $expression = '!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!';
+  $posts = preg_grep($expression , array_keys($array));
+  return (array_keys($array) == $posts) ? true : false;
+}
 ?>

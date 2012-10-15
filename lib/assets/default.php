@@ -1,7 +1,7 @@
 <!doctype html>
 <head>
 	<meta charset="UTF-8">
-	<title><?= $page->title ?> --- <?= $site['name'] ?></title>
+	<title><?= $this->title ?> --- <?= $site['name'] ?></title>
 </head>
 
 <body>
@@ -11,11 +11,11 @@
 	</h1>
 
 	<nav>
-		<?= $page->menu_li ?>
+		<?= $this->menu_li ?>
 	</nav>
 
 	<article>
-		<?= $page->content ?>
+		<?= $this->content ?>
 	</article>
 
 </body>

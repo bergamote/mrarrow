@@ -1,6 +1,6 @@
 <?php 
 //MISTER ARROW
-
+echo ">>>>-------------MrA-------------->".PHP_EOL;
 // some great, recursive, tree functions, look inside for licenses
 require "assets/explodeTree.php";
 // the php-markdown library
@@ -124,24 +124,32 @@ function makeMenu($array=false)
       $dest_path = substr_replace($file_part['dirname'], "", 0, ( strlen($site['content_dir']) +1));
       $sprtr = "/";
       if ($dest_path == ""){$sprtr = "";}
-      $dest_path = sane($dest_path.$sprtr.$nice_name)."/".$test_trail;
-      return $dest_path;
+        $dest_path = sane($dest_path.$sprtr.$nice_name)."/".$test_trail;
+        return $dest_path;
     } else {
-    return false;
+      return false;
     }
   }
-  $newArr = array();
-  foreach ($array as $k=>$v) {
-    $file_part = pathinfo($k);
-    $nice_name = $file_part['filename'];
-
-    if(!in_array($nice_name[0], $skipers) && ($v != "")) {
-      $add_key = $file_part['basename'];
-      $newArr[$add_key] = makeMenu($v);
-      //echo "  ".$add_key.PHP_EOL;
+  if(!is_blog($array)) {
+    $newArr = array();
+    foreach ($array as $k=>$v) {
+      $file_part = pathinfo($k);
+      $nice_name = $file_part['filename'];
+      if(!in_array($nice_name[0], $skipers) && ($v != "")) {
+        $add_key = $file_part['basename'];
+        $newArr[$add_key] = makeMenu($v);
+        //echo "  ".$add_key.PHP_EOL;
+      }
     }
+    return $newArr;
+  } else {
+    $sacrfc = array_shift($array);
+    $dest_path = substr_replace(dirname($sacrfc), "", 0, ( strlen($site['content_dir']) +1));
+     echo $dest_path.PHP_EOL;   
+    $dest_path = sane(basename($dest_path))."/".$test_trail;
+    echo $dest_path.PHP_EOL;
+       return $dest_path; 
   }
-  return $newArr;
 }
 
 //--- Make $menu_li for the current page (a string, html nested unordered list)
@@ -164,10 +172,8 @@ function plotMenu($arr, $rel, $indent=2){
       $link .= $spaces.'<li><a href="'.$rel.$v.'">'.$k.'</a></li>'.PHP_EOL;
     } else {
       $sk = sane($k);
-      $link .= $spaces.'<li onmouseover="showSubMenu(\'#'.$sk.'\')"';
-      $link .= ' onmouseout="hideSubMenu(\'#'.$sk.'\')">';
-      $link .= $k.PHP_EOL.$spaces.'<ul ';
-      $link .= 'id="'.$sk.'">'.PHP_EOL;
+      $link .= "$spaces<li id=\"$sk\">$k".PHP_EOL;
+      $link .= " $spaces<ul id=\"$sk\">".PHP_EOL;
       $link .= plotMenu($v, $rel, ($indent+1));
       $link .= $spaces."  </ul>\n";
       $link .= $spaces."</li>\n";
@@ -198,20 +204,20 @@ function plotSite($arr, $indent=0, $mother_run=true){
     if($indent == 0){
       // this is a root node. no parents
       //echo "O Create site".PHP_EOL;
-      global $main_index;
-      $main_index = new Index;
-      $main_index->path = $show_val;
-      $main_index->makeIndex();
+      global $index;
+      $index = new Index;
+      $index->makeIndex();
     } elseif(is_array($v)){
       // this is a normal node. parents and children
-        // let's check if it's a blog
-      $ls_cmd = "ls $site[content_dir]/".escapeshellarg($show_val).'/';
-      $ls_txt = shell_exec("$ls_cmd | egrep \.txt$");
-      $regex = '^[[:digit:]]{4}[_\ -]?[[:digit:]]{2}[_\ -]?[[:digit:]]{2}.*\.txt$';
-      $ls_pot = shell_exec("$ls_cmd | egrep $regex");
-      if ($ls_txt == $ls_pot) {
-        echo "Woa, looks like we've got ourselves a blog folder!".PHP_EOL;
-      } else {
+      // let's check if it's a blog folder
+      if (is_blog($v)) {
+        echo "  Blog folder $k".PHP_EOL;
+        global $blog;
+        $blog = new Blog;
+        $blog->posts = $v;
+        $blog->show = $show_val;
+        $blog->makeBlog();
+      } else {  // It's not a blog so it's a category
         echo "  Category $k".PHP_EOL;
       }
     } elseif(!is_dir($show_val)) {
@@ -301,4 +307,36 @@ EOD;
   }
 }
 exit(0);
+
+class Blog {
+  public $title;
+  public $content;
+  public $menu_li;
+  public function makeBlog(){
+    global $site, $menu;
+    echo "blog ".PHP_EOL;
+    arsort($this->posts);
+    echo $this->show.PHP_EOL;
+    $this->menu_li = makeMenuLi('../');
+    $blog_roll = "<section>".PHP_EOL;
+    foreach ($this->posts as $k=>$v) {
+      $post = file_get_contents($v);
+      $post = Markdown($post);
+      $blog_roll .= "<hr>$post";
+    }
+    $blog_roll .= "</section>";
+    $this->content = $blog_roll;
+    $this->title = $this->show;
+    $dest_path = "$site[export_dir]/".sane($this->show);
+    exec("mkdir -p ".escapeshellarg($dest_path));
+    $dest_path .= "/index.html";
+    ob_start();
+      include $site['template'];
+      file_put_contents($dest_path, ob_get_contents());
+    ob_end_clean();
+  }
+}
+exit(0);
 ?>
+?>
+
