@@ -50,7 +50,9 @@ $cr_export = check_create("export");
 
 // Extracting the packed themes if they don't alresdy exist.
 $cr_theme = check_create("theme");
-$ls_theme = `ls theme/`;
+exec('cp -r lib/assets/theme/* theme/');
+ /*
+ $ls_theme = `ls theme/`;
 $ls_pack_theme = `ls lib/assets/theme/`;
 $ls_theme_ar = explode(PHP_EOL, $ls_theme);
 $ls_pack_ar = explode(PHP_EOL, $ls_pack_theme);
@@ -66,7 +68,7 @@ foreach ($ls_pack_ar as $filename) {
     }
   }
 }
-
+ */
 // Put a example page in content.
 $cr_content = check_create("content");
 $example_page = <<<EOD

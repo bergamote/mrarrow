@@ -51,8 +51,6 @@ if ( (!empty($site['theme'])) && is_dir($site['theme_dir']."/".$site['theme']) )
 }
 $site['theme_dir'] .= (substr($site['theme_dir'], -1) == '/')?:'/';
 
-
-
 //-------------------------	Compressing css and js from theme folder 
 if ($yui_sw){
   if(!exec("which yui-compressor")) {
@@ -61,7 +59,7 @@ if ($yui_sw){
     echo "yui-compress";
     catCompYUI("css");
     catCompYUI("js");
-    echo "done";
+    echo "done".PHP_EOL;
   }
 }
 //-------------------------	Copy everything else
@@ -97,7 +95,6 @@ plotSite($tree);
 ##################################################### MAIN FUNCTIONS
 
 //------------------------- The menu making functions
-
 
 //--- Make the $menu array
 function makeMenu($array=false)
@@ -157,19 +154,13 @@ function plotMenu($arr, $rel, $indent=2){
       $link .= $spaces.'<li><a href="'.$rel.$v.'">'.$k.'</a></li>'.PHP_EOL;
     } else {
       $sk = sane($k);
-      $link .= "$spaces<li id=\"$sk\">$k".PHP_EOL;
-      $link .= " $spaces<ul id=\"$sk\">".PHP_EOL;
+      $link .= "$spaces<li id=\"$sk\">$k".PHP_EOL."$spaces<ul id=\"$sk\">".PHP_EOL;
       $link .= plotMenu($v, $rel, ($indent+1));
-      $link .= $spaces."  </ul>\n";
-      $link .= $spaces."</li>\n";
+      $link .= "$spaces  </ul>".PHP_EOL."$spaces</li>".PHP_EOL;
     }
   }
   return $link;
 }
-
-
-
-
 
 ####################################----- The website plotting function
 
@@ -224,7 +215,6 @@ function plotSite($arr, $indent=0, $mother_run=true){
     exit(0);
   }
 }
-
 
 ############################################
 //---------------------------------- Classes
@@ -344,8 +334,7 @@ class Post {
     else {
       $this->content = Markdown($this->content);
       $this->link = "../".$this->link;
-    }
-    
+    }  
     ob_start();
       include set_template('post');
       $this->content = ob_get_contents();
