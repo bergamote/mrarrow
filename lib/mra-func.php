@@ -1,16 +1,15 @@
 <?php
 date_default_timezone_set('UTC');
 //date_default_timezone_set();
-$date_regex = '!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!';
+
 
 //------------------------- Check if template exists, else go into parent folder
 function set_template($template) {
-  global $site;
-  $good = $site['theme_dir'].$template.'.php';
+  $good = THEME.$template.'.php';
   if (is_file($good)) {
     return $good;
   } else {
-    return "$site[theme_dir]../$template.php";
+    return THEME."../$template.php";
   }
 }
 //------------------------- Find our position relative to root
@@ -47,8 +46,7 @@ function sane($s) {
 }
 
 function stripDate($string) {
-  global $date_regex;
-	$string = preg_replace($date_regex, "", $string);
+	$string = preg_replace(DATE_REGEX, "", $string);
 	return $string;
 }
 //---------------------------- stripNum : Strip prefixed ordering number
@@ -98,19 +96,19 @@ function stripNumPath($path, $hash=false) {
 	return $path;
 }
 //---------------------------- Compress theme's javascript and css with yui-compressor
-function catCompYUI($ext) {
-  echo "....";
-  global $site;
-  $pathIn = escapeshellarg($site['theme_dir']);
-  $pathOut = escapeshellarg($site['export_dir']."/"); 
+function catCompYUI($ext, $yui) {
+  $pathIn = escapeshellarg(THEME);
+  $pathOut = escapeshellarg(EXPORT); 
   $filename = ( $ext=="css" ? "style.css" : "script.js" );
 	exec("ls $pathIn*.$ext 2>&1 1> /dev/null", $output, $ret_val);
 	if($ret_val == 0) {
-		exec("cat $pathIn*.$ext > tmp.$ext");
-		exec("yui-compressor tmp.".$ext." > ".$site['export_dir']."/".$filename);
-		exec("rm tmp.".$ext);
-	} else {
-		echo "No .$ext files found in $site[theme].".PHP_EOL;
+		exec("cat $pathIn*.$ext > $pathOut/$filename");
+		echo "....$ext";
+		if ($yui != 'off') {
+		  exec("cp $pathOut/$filename $pathOut/tmp-$filename");
+		  exec("yui-compressor $pathOut/tmp-$filename> $pathOut/$filename");
+		  exec("rm $pathOut/tmp-$filename");
+    }
 	}
 }
 
@@ -137,11 +135,10 @@ function parseHeader($data) {
 }
 //----------------------------------- Check if a folder array is a blog
 function is_blog($who) {
-  global $date_regex;
   if (is_array($who)) {
-    $posts = preg_grep($date_regex , array_keys($who));
+    $posts = preg_grep(DATE_REGEX , array_keys($who));
     return (array_keys($who) == $posts) ? true : false;
   }
-  return (preg_match($date_regex, $who) == 1) ? true : false;
+  return (preg_match(DATE_REGEX, $who) == 1) ? true : false;
 }
 ?>

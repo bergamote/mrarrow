@@ -12,12 +12,11 @@
 
 <header>
  <hgroup>
- <h3><?= $site['name'] ?></h3>
- <!--<h2><?= $site['tagline']?></h2>-->
+ <h3><?= trim($site['name']) ?></h3>
  </hgroup>
 </header>
 
-<nav id="main">
+<nav id="main" class="gfont">
 <?= $this->menu_li ?>
 </nav>
 
@@ -27,9 +26,9 @@
 
 </article>
 
-<footer>
+<footer class="gfont">
 <?= (empty($site['email']))?'':"<div id=\"mail\">$site[email]</div>"; ?>
-<div id="theme"><em>Mr Arrow with the <?= $site['theme'] ?> theme.</em></div>
+<div id="theme"><em>MrArrow with the <?= $site['theme'] ?> theme.</em></div>
 </footer>
 
 </div> <!-- /page -->

@@ -18,8 +18,7 @@ $test_trail = "";
 //------------------------- The default settings if not in site.conf
 $default_site = array (
   'name' => 'My new site',
-  'tagline' => 'Just another Mr Arrow website',
-  'theme' => '',
+  'theme' => 'Quiver',
   'theme_dir' => 'theme',
   'content_dir' => 'content',
   'export_dir' => 'export',
@@ -42,26 +41,25 @@ foreach ($default_site as $key => $val) {
   }
 }
 //------------------------- Find in which folder to look for templates
-$yui_sw = false;
 if ( (!empty($site['theme'])) && is_dir($site['theme_dir']."/".$site['theme']) ) {
   $site['theme_dir'] = $site['theme_dir']."/".$site['theme'];
-  $yui_sw = true;
 } elseif (!empty($site['theme'])) {
   echo "Theme '".$site['theme']."' not found, using default theme.".PHP_EOL;
 }
-$site['theme_dir'] .= (substr($site['theme_dir'], -1) == '/')?:'/';
+$site['theme_dir'] .= (substr($site['theme_dir'], -1) == '/')?'':'/';
+// Set in stone
+define('SITE', $site['name']);
+define('CONTENT',$site['content_dir']);
+define('EXPORT',$site['export_dir']);
+define('THEME',$site['theme_dir']);
+define('DATE_REGEX','!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!');
 
 //-------------------------	Compressing css and js from theme folder 
-if ($yui_sw){
-  if(!exec("which yui-compressor")) {
-    echo "yui-compressor is not installed.".PHP_EOL;
-  } else {
-    echo "yui-compress";
-    catCompYUI("css");
-    catCompYUI("js");
-    echo "done".PHP_EOL;
-  }
-}
+$yui_sw = (!exec("which yui-compressor"))?'off':'on';
+catCompYUI("css", $yui_sw);
+catCompYUI("js", $yui_sw);
+echo PHP_EOL;
+
 //-------------------------	Copy everything else
 if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
@@ -85,27 +83,26 @@ if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"
 }
 $tree = explodeTree($files, "/", true);
 ksortTree($tree);
-
+//print_r($tree);
 $menu = array(); 
 $menu = makeMenu($tree[$site['content_dir']]);
 $menu = stripNumTree($menu, 'both');
+//print_r($menu);
 
 plotSite($tree);
 
-##################################################### MAIN FUNCTIONS
-
-//------------------------- The menu making functions
+############################### Menu making functions
 
 //--- Make the $menu array
 function makeMenu($array=false)
 {
-  global $site, $menu, $test_trail;
-  $skipers = array('_','#','0'); // skiped the prefixed filenames
+  global $menu, $test_trail;
+  $skipers = array('_','#','0'); // skip prefixed filenames
   if (!is_array($array)) {
     $file_part = pathinfo($array);
     $nice_name = $file_part['filename'];
     if(!in_array($nice_name[0], $skipers)) {
-      $dest_path = substr_replace($file_part['dirname'], "", 0, ( strlen($site['content_dir']) +1));
+      $dest_path = substr_replace($file_part['dirname'], "", 0, ( strlen(CONTENT) +1));
       $sprtr = "/";
       if ($dest_path == ""){$sprtr = "";}
         $dest_path = sane($dest_path.$sprtr.$nice_name)."/".$test_trail;
@@ -128,34 +125,33 @@ function makeMenu($array=false)
     return $newArr;
   } else {
     $sacrfc = array_shift($array);
-    $dest_path = substr_replace(dirname($sacrfc), "", 0, ( strlen($site['content_dir']) +1));
+    $dest_path = substr_replace(dirname($sacrfc), "", 0, ( strlen(CONTENT) +1));
     $dest_path = sane(basename($dest_path))."/".$test_trail;
     return $dest_path; 
   }
 }
-
 //--- Make $menu_li for the current page (a string, html nested unordered list)
-
-function makeMenuLi($rel) {
+//--- and give id="sel" to the li of the current page.
+function makeMenuLi($rel, $self=false) {
   global $menu;
   $menu_li = ' <ul>'.PHP_EOL;
-  $menu_li .= plotMenu($menu, $rel);
+  $menu_li .= plotMenu($menu, $rel, $self);
   $menu_li .= ' </ul>'.PHP_EOL;
   return $menu_li;
 }
-
-function plotMenu($arr, $rel, $indent=2){
+function plotMenu($arr, $rel, $self, $indent=2){
   $link = "";
   foreach($arr as $k=>$v){
     $spaces = str_repeat("  ", $indent);
     if(!is_array($v)){
       $k = pathinfo($k, PATHINFO_FILENAME);
-      $v = $v;
-      $link .= $spaces.'<li><a href="'.$rel.$v.'">'.$k.'</a></li>'.PHP_EOL;
+      $class_sel = ($self == $k)?' class="sel"':'';      
+      $link .= $spaces."<li$class_sel><a href=\"$rel$v\">$k</a></li>".PHP_EOL;
     } else {
       $sk = sane($k);
-      $link .= "$spaces<li id=\"$sk\">$k".PHP_EOL."$spaces<ul id=\"$sk\">".PHP_EOL;
-      $link .= plotMenu($v, $rel, ($indent+1));
+      $class_sel = ($self == $k)?' class="sel"':''; 
+      $link .= "$spaces<li$class_sel>$k".PHP_EOL."$spaces<ul id=\"$sk\">".PHP_EOL;
+      $link .= plotMenu($v, $rel, $self, ($indent+1));
       $link .= "$spaces  </ul>".PHP_EOL."$spaces</li>".PHP_EOL;
     }
   }
@@ -165,7 +161,6 @@ function plotMenu($arr, $rel, $indent=2){
 ####################################----- The website plotting function
 
 function plotSite($arr, $indent=0, $mother_run=true){
-  global $site;
   if($mother_run){
     // the beginning of plotTree. We're at rootlevel
     echo "Start\n";
@@ -183,7 +178,7 @@ function plotSite($arr, $indent=0, $mother_run=true){
       global $index;
       $index = new Index;
       $index->makeIndex();
-      echo " Index : $site[name]".PHP_EOL;
+      echo " Index : ".SITE.PHP_EOL;
     } elseif(is_array($v)){
       // this is a normal node. parents and children
       // let's check if it's a blog folder
@@ -191,6 +186,7 @@ function plotSite($arr, $indent=0, $mother_run=true){
         global $blog;
         $blog = new Blog;
         $blog->posts = $v;
+        $blog->path = 
         $blog->title = stripNum($show_val);
         $blog->makeBlog();
         echo " Blog : ".$show_val.PHP_EOL;
@@ -218,6 +214,7 @@ function plotSite($arr, $indent=0, $mother_run=true){
 
 ############################################
 //---------------------------------- Classes
+# PAGE
 class Page {
   public $title;
   public $content;
@@ -225,7 +222,7 @@ class Page {
   public $rel;
   public $menu_li;
   public function makePage(){
-    global $site, $page;
+    global $site;
     $file_part = pathinfo($this->path);
     $this->title = stripNum($file_part['filename']); 
     if ($this->title[0] == "#") {
@@ -242,25 +239,25 @@ class Page {
     $this->content .= Markdown($data); 
     }
     $this->content .= "</article>";
-    $dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);
+    $dest_path = str_replace(CONTENT, "", $file_part['dirname']);
 
     $this->rel = findRel(sane($dest_path));
-    $this->menu_li = makeMenuLi($this->rel);
+    $this->menu_li = makeMenuLi($this->rel, $this->title);
 
     $dest_path = sane($dest_path.'/'.$this->title);
     $dest_path = stripNumPath($dest_path, true);
-    $dest_path = $site['export_dir'].$dest_path;
-
+    
+    $dest_path = EXPORT.$dest_path;
     exec("mkdir -p ".escapeshellarg($dest_path));
     $dest_path .= "/index.html";
 
     ob_start();
-      include $site['theme_dir'].'default.php';
+      include THEME.'default.php';
       file_put_contents($dest_path, ob_get_contents());
     ob_end_clean();
   }
 }
-
+# INDEX
 class Index {
   public $menu_li;
   public function makeIndex(){
@@ -282,7 +279,7 @@ EOD;
     file_put_contents($site['export_dir']."/index.html", $simple_index);
   }
 }
-
+# BLOG
 class Blog {
   public $title;
   public $content;
@@ -304,14 +301,14 @@ class Blog {
     exec("mkdir -p ".escapeshellarg($dest_path));
     $dest_path .= "/index.html";
     $this->rel = findRel(sane($dest_path));
-    $this->menu_li = makeMenuLi($this->rel);
+    $this->menu_li = makeMenuLi($this->rel, stripNum($this->title));
     ob_start();
       include $site['theme_dir'].'default.php';
       file_put_contents($dest_path, ob_get_contents());
     ob_end_clean();
   }
 }
-
+# POST
 class Post {
   public $path;
   public $title;
@@ -319,9 +316,8 @@ class Post {
   public $date;
   public $link;
   public function makePost($short=false) {
-    global $site, $date_regex, $post;
     $this->link = sane(pathinfo($this->title, PATHINFO_FILENAME)).'/';
-    preg_match($date_regex, $this->title, $date_ar);
+    preg_match(DATE_REGEX, $this->title, $date_ar);
     $this->date = preg_replace('![_\ -]!','-',sane($date_ar[0]));
     $this->date = date('l jS \of F Y', strtotime($this->date)).PHP_EOL;
     $this->title = stripDate(pathinfo($this->title, PATHINFO_FILENAME));
@@ -329,7 +325,7 @@ class Post {
     if($short) {
       $parts = explode('<!--more-->',$this->content);
       $content = $parts[0];
-      $content .= (empty($parts[1]))?:" - [read more](".$this->link.")";
+      $content .= (empty($parts[1]))?'':" - [read more](".$this->link.")";
       $this->content = Markdown($content);}
     else {
       $this->content = Markdown($this->content);
