@@ -110,10 +110,10 @@ color:#322;
 
 body {
 	color:#322;
-	font-family: serif;
+	font-family: sans;
 	background:#fff;
-	/*background: url('patterrific_patt_8brownstripes03.jpg') repeat; */
-	/*background-size: cover;*/
+	background: url('background.jpg') no-repeat center center fixed; 
+	background-size: cover;
 }
 
 #page {
@@ -151,6 +151,10 @@ nav#main > ul > li:hover,
 nav#main ul li.sel {
  background-color: #fafafa;
  box-shadow: 0 -0.13em 0.11em 0 #aaa;
+}
+nav#main li > ul > li.sel {
+ text-decoration:underline;
+ box-shadow:none;
 }
 
 nav#main li:hover > ul{
@@ -198,8 +202,17 @@ footer div#theme {
 
 
 #enter {
-	font-size:5em;
+	font-size:3em;
 	text-align:center;
+}
+#enter li {
+list-style:none;
+margin:0;
+padding:0;
+}
+#enter .cat {
+font-size:0.5em;.
+display:block;
 }
 #enter a {
 color:#332222;
@@ -207,6 +220,10 @@ text-decoration:none;
 }
 #enter a:hover {
 	color:#444499;
+}
+#enter header {
+  font-size:1.2em;
+  margin-top:0.5em;
 }
 
 

@@ -18,7 +18,7 @@ $test_trail = "";
 //------------------------- The default settings if not in site.conf
 $default_site = array (
   'name' => 'My new site',
-  'theme' => 'Quiver',
+  'theme' => '',
   'theme_dir' => 'theme',
   'content_dir' => 'content',
   'export_dir' => 'export',
@@ -56,28 +56,28 @@ define('DATE_REGEX','!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!');
 
 //-------------------------	Compressing css and js from theme folder 
 $yui_sw = (!exec("which yui-compressor"))?'off':'on';
-catCompYUI("css", $yui_sw);
-catCompYUI("js", $yui_sw);
+catComp("css", $yui_sw);
+catComp("js", $yui_sw);
 echo PHP_EOL;
 
 //-------------------------	Copy everything else
-if(exec("find ".getcwd()."/".$site['content_dir'].' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
+if(exec("find ".getcwd()."/".CONTENT.' -type f  | egrep -v ".txt|.md|.markdown"' , $cpfiles)){
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
 }
 if(!empty($cpfiles)) {
   echo "Copy files (if modified):".PHP_EOL;
   foreach ($cpfiles as $v) {
     $file_part = pathinfo($v);		
-    $dest_path = str_replace($site['content_dir'], "", $file_part['dirname']);	
+    $dest_path = str_replace(CONTENT, "", $file_part['dirname']);	
     $dest_path = sane($dest_path.'/');
     $dest_path = stripNumPath($dest_path, true);
-    $dest_path = $site['export_dir'].$dest_path.$file_part['basename'];
+    $dest_path = EXPORT.$dest_path.$file_part['basename'];
     exec('cp -fu --preserve=timestamps '.escapeshellarg($v).' '.$dest_path);
     echo "  $v -> $dest_path".PHP_EOL;		
   }
 }
 //------------------------- Make the site's tree
-if(exec("find ".getcwd()."/".$site['content_dir'].' | egrep ".txt|.md|.markdown"' , $files)){
+if(exec("find ".getcwd()."/".CONTENT.' | egrep ".txt|.md|.markdown"' , $files)){
   $files = substr_replace($files, "", 0, ( strlen(getcwd()) +1) );
   $files = array_combine(array_values($files), array_values($files));
 }
@@ -85,7 +85,7 @@ $tree = explodeTree($files, "/", true);
 ksortTree($tree);
 //print_r($tree);
 $menu = array(); 
-$menu = makeMenu($tree[$site['content_dir']]);
+$menu = makeMenu($tree[CONTENT]);
 $menu = stripNumTree($menu, 'both');
 //print_r($menu);
 
@@ -99,14 +99,13 @@ function makeMenu($array=false)
   global $menu, $test_trail;
   $skipers = array('_','#','0'); // skip prefixed filenames
   if (!is_array($array)) {
-    $file_part = pathinfo($array);
-    $nice_name = $file_part['filename'];
+    $nice_name = sane(pathinfo($array, PATHINFO_FILENAME));
     if(!in_array($nice_name[0], $skipers)) {
-      $dest_path = substr_replace($file_part['dirname'], "", 0, ( strlen(CONTENT) +1));
+      $dest_path = get_folder($array);
       $sprtr = "/";
       if ($dest_path == ""){$sprtr = "";}
-        $dest_path = sane($dest_path.$sprtr.$nice_name)."/".$test_trail;
-        return $dest_path;
+      $dest_path = $dest_path.$sprtr.$nice_name."/".$test_trail;
+      return $dest_path;
     } else {
       return false;
     }
@@ -124,9 +123,7 @@ function makeMenu($array=false)
     }
     return $newArr;
   } else {
-    $sacrfc = array_shift($array);
-    $dest_path = substr_replace(dirname($sacrfc), "", 0, ( strlen(CONTENT) +1));
-    $dest_path = sane(basename($dest_path))."/".$test_trail;
+    $dest_path = get_folder($array);
     return $dest_path; 
   }
 }
@@ -149,7 +146,7 @@ function plotMenu($arr, $rel, $self, $indent=2){
       $link .= $spaces."<li$class_sel><a href=\"$rel$v\">$k</a></li>".PHP_EOL;
     } else {
       $sk = sane($k);
-      $class_sel = ($self == $k)?' class="sel"':''; 
+      $class_sel = ($self == $k)?' class="sel cat"':' class="cat"'; 
       $link .= "$spaces<li$class_sel>$k".PHP_EOL."$spaces<ul id=\"$sk\">".PHP_EOL;
       $link .= plotMenu($v, $rel, $self, ($indent+1));
       $link .= "$spaces  </ul>".PHP_EOL."$spaces</li>".PHP_EOL;
@@ -165,7 +162,6 @@ function plotSite($arr, $indent=0, $mother_run=true){
     // the beginning of plotTree. We're at rootlevel
     echo "Start\n";
   }
- 
   foreach($arr as $k=>$v){
     // skip the baseval and _prefixed filenames.
     if($k[0] == "_") continue;
@@ -186,7 +182,7 @@ function plotSite($arr, $indent=0, $mother_run=true){
         global $blog;
         $blog = new Blog;
         $blog->posts = $v;
-        $blog->path = 
+        $blog->path = get_folder($v);
         $blog->title = stripNum($show_val);
         $blog->makeBlog();
         echo " Blog : ".$show_val.PHP_EOL;
@@ -228,6 +224,8 @@ class Page {
     if ($this->title[0] == "#") {
       $this->title = substr($this->title, 1);
     }
+    $dest_path = get_folder($this->path);
+    $this->rel = findRel(sane($dest_path));
     $this->content = "<article>";
     if (is_blog($this->title)) {
       $post = new Post;
@@ -239,15 +237,13 @@ class Page {
     $this->content .= Markdown($data); 
     }
     $this->content .= "</article>";
-    $dest_path = str_replace(CONTENT, "", $file_part['dirname']);
 
-    $this->rel = findRel(sane($dest_path));
     $this->menu_li = makeMenuLi($this->rel, $this->title);
 
     $dest_path = sane($dest_path.'/'.$this->title);
     $dest_path = stripNumPath($dest_path, true);
     
-    $dest_path = EXPORT.$dest_path;
+    $dest_path = EXPORT.'/'.$dest_path;
     exec("mkdir -p ".escapeshellarg($dest_path));
     $dest_path .= "/index.html";
 
@@ -261,23 +257,17 @@ class Page {
 class Index {
   public $menu_li;
   public function makeIndex(){
-    global $site, $menu;
+    global $site;
     $this->menu_li = makeMenuLi('');
-    $simple_index = <<<EOD
-<!DOCTYPE html>
-<head>
-<title>$site[name]</title>
-</head>
-<body>
-<br>
-<h1>$site[name]</h1>
-<nav>
-$this->menu_li
-</nav>
-</body>
-EOD;
-    file_put_contents($site['export_dir']."/index.html", $simple_index);
+    $template = (is_file(THEME.'index.php'))?THEME.'index.php':THEME.'../index.php';
+  ob_start();
+    include $template;
+    file_put_contents(EXPORT."/index.html", ob_get_contents());
+  ob_end_clean();
   }
+  /*public function get_style() {
+    $link = ()?'<':'';
+  }*/
 }
 # BLOG
 class Blog {
@@ -285,11 +275,12 @@ class Blog {
   public $content;
   public $date;
   public $menu_li;
-  
+  public $path;
   public function makeBlog(){
     global $site, $menu;
     arsort($this->posts);
     $this->content = "<section>".PHP_EOL;
+    
     foreach ($this->posts as $k=>$v) {
     	$post = new Post;
 			$post->path = $v;
@@ -297,13 +288,13 @@ class Blog {
 			$this->content .= $post->makePost(true);
     }
     $this->content .= "</section>";
-    $dest_path = "$site[export_dir]/".stripNum(sane($this->title));
+    $dest_path = EXPORT."/".sane($this->title);
     exec("mkdir -p ".escapeshellarg($dest_path));
+    $this->rel = findRel($this->path);
     $dest_path .= "/index.html";
-    $this->rel = findRel(sane($dest_path));
-    $this->menu_li = makeMenuLi($this->rel, stripNum($this->title));
+    $this->menu_li = makeMenuLi($this->rel, $this->title);
     ob_start();
-      include $site['theme_dir'].'default.php';
+      include THEME.'default.php';
       file_put_contents($dest_path, ob_get_contents());
     ob_end_clean();
   }

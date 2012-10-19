@@ -36,7 +36,7 @@ $site_file .= "name = ".$site_name.PHP_EOL;
 if (!empty($site_email)){
   $site_file .= "email = ".$site_email.PHP_EOL;
 }
-$site_file .= "theme = ";
+$site_file .= "theme = Quiver".PHP_EOL;
 file_put_contents('site.conf', $site_file);
 
 // Create the standard folders
@@ -51,24 +51,7 @@ $cr_export = check_create("export");
 // Extracting the packed themes if they don't alresdy exist.
 $cr_theme = check_create("theme");
 exec('cp -r lib/assets/theme/* theme/');
- /*
- $ls_theme = `ls theme/`;
-$ls_pack_theme = `ls lib/assets/theme/`;
-$ls_theme_ar = explode(PHP_EOL, $ls_theme);
-$ls_pack_ar = explode(PHP_EOL, $ls_pack_theme);
-foreach ($ls_pack_ar as $filename) {
-  if (!empty($filename)) {
-    $filename = str_replace(".tar.gz", "", $filename);
-    if (is_dir("theme/$filename")) {
-      echo " Theme already exists: $filename".PHP_EOL;
-    }
-    else {
-      mkdir("theme/$filename");
-      exec("tar xvfz lib/assets/theme/$filename.tar.gz -C theme/$filename");
-    }
-  }
-}
- */
+
 // Put a example page in content.
 $cr_content = check_create("content");
 $example_page = <<<EOD

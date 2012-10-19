@@ -16,7 +16,7 @@ function set_template($template) {
 function findRel($cur_url) {
 	$rel = "../";	
 	if ($cur_url != "") {
-		$rel = relativePath("/".$cur_url, "/" );
+		$rel .= relativePath("/".$cur_url, "/" );
 	}
 	return $rel;
 }
@@ -96,7 +96,7 @@ function stripNumPath($path, $hash=false) {
 	return $path;
 }
 //---------------------------- Compress theme's javascript and css with yui-compressor
-function catCompYUI($ext, $yui) {
+function catComp($ext, $yui) {
   $pathIn = escapeshellarg(THEME);
   $pathOut = escapeshellarg(EXPORT); 
   $filename = ( $ext=="css" ? "style.css" : "script.js" );
@@ -106,11 +106,22 @@ function catCompYUI($ext, $yui) {
 		echo "....$ext";
 		if ($yui != 'off') {
 		  exec("cp $pathOut/$filename $pathOut/tmp-$filename");
-		  exec("yui-compressor $pathOut/tmp-$filename> $pathOut/$filename");
+		  exec("yui-compressor $pathOut/tmp-$filename > $pathOut/$filename");
 		  exec("rm $pathOut/tmp-$filename");
     }
 	}
 }
+//----------------------------------- Get sane dest path from origin
+function get_folder($value) {
+  if(is_array($value)) {
+    $value = array_shift($value);
+  }
+  $value = substr_replace(dirname($value), "", 0, ( strlen(CONTENT) +1));
+  $value = sane(basename($value));
+  return $value;
+}
+
+
 
 //----------------------------------- Extract the header
 
