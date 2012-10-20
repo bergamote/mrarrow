@@ -22,7 +22,8 @@ $default_site = array (
   'theme_dir' => 'theme',
   'content_dir' => 'content',
   'export_dir' => 'export',
-  'lib_dir' => 'lib');
+  'lib_dir' => 'lib',
+  'max_posts'=> 2);
 //------------------------- store site.conf settings into $site array
 $site = array();
 $conf_file = getcwd()."/site.conf";
@@ -53,6 +54,7 @@ define('CONTENT',$site['content_dir']);
 define('EXPORT',$site['export_dir']);
 define('THEME',$site['theme_dir']);
 define('DATE_REGEX','!^[0-9]{4}[_\ -]?[0-9]{2}[_\ -]?[0-9]{2}[_\ -]?!');
+define('MAX_POSTS',$site['max_posts']);
 
 //-------------------------	Compressing css and js from theme folder 
 $yui_sw = (!exec("which yui-compressor"))?'off':'on';
@@ -180,22 +182,22 @@ function plotSite($arr, $indent=0, $mother_run=true){
       // let's check if it's a blog folder
       if (is_blog($v)) {
         global $blog;
+        echo " Blog : ".$show_val.PHP_EOL;        
         $blog = new Blog;
         $blog->posts = $v;
         $blog->path = get_folder($v);
         $blog->title = stripNum($show_val);
         $blog->makeBlog();
-        echo " Blog : ".$show_val.PHP_EOL;
       } else {  // It's not a blog so it's a category
         echo " Category : $k".PHP_EOL;
       }
     } elseif(!is_dir($show_val)) {
       // this is a leaf node. no children
+			echo "  + ".$show_val.PHP_EOL;      
 			global $page;
 			$page = new Page;
 			$page->path = $show_val;
 			$page->makePage();
-			echo "  + ".$show_val.PHP_EOL;
     }
     if(is_array($v)){
       // this is what makes it recursive, rerun for childs
@@ -275,28 +277,60 @@ class Blog {
   public $content;
   public $date;
   public $menu_li;
-  public $path;
+  public $posts;
   public function makeBlog(){
     global $site, $menu;
     arsort($this->posts);
-    $this->content = "<section>".PHP_EOL;
-    
-    foreach ($this->posts as $k=>$v) {
-    	$post = new Post;
-			$post->path = $v;
-			$post->title = $k;
-			$this->content .= $post->makePost(true);
-    }
-    $this->content .= "</section>";
+    $this->content = $this->makeBlogRoll($this->posts);
     $dest_path = EXPORT."/".sane($this->title);
     exec("mkdir -p ".escapeshellarg($dest_path));
+    
     $this->rel = findRel($this->path);
-    $dest_path .= "/index.html";
+    $this->rel = substr($this->rel, 0, 3);
     $this->menu_li = makeMenuLi($this->rel, $this->title);
-    ob_start();
-      include THEME.'default.php';
-      file_put_contents($dest_path, ob_get_contents());
-    ob_end_clean();
+
+    $title = $this->title;
+
+    $pages = ceil(count($this->posts)/MAX_POSTS);
+    echo count($this->posts).'post------'.$pages.'page------'.PHP_EOL;
+    $i = 1;
+    while ($i <= $pages) {
+      $this->title = $title;
+      $prev = '<a href="page'.($i+1).'.html">&larr; prev</a> ';
+      $next = '<a href="page'.($i-1).'.html">&rarr; next</a> '; 
+      $path = $dest_path.'/page'.$i.'.html';
+      if ($i == 2) {
+        $next = '<a href="index.html">&rarr; next</a> ';
+      }
+      if ($i == $pages) {
+        $prev = '';
+      }
+      if ($i == 1) {
+        $path = $dest_path.'/index.html'; 
+        $next = '';
+      } else {
+        $this->title .= ' | Page '.$i;
+      }
+      $cur_page = array_splice($this->posts, 0, MAX_POSTS);
+      $this->content = $this->makeBlogRoll($cur_page);
+      $this->content .= ($pages != 1)?PHP_EOL.'<nav id="blog_roll">'.$prev.$next.'</nav>'.PHP_EOL:'';
+      ob_start();
+        include THEME.'default.php';
+        file_put_contents($path, ob_get_contents());
+      ob_end_clean();      
+      $i++;
+    }
+  }
+  public function makeBlogRoll($posts) {
+    $blog_roll = "<section>".PHP_EOL;
+    foreach ($posts as $k=>$v) {
+    	$post = new Post;
+		  $post->path = $v;
+		  $post->title = $k;
+		  $blog_roll .= $post->makePost(true);
+    }
+    $blog_roll .= "</section>";
+    return $blog_roll;
   }
 }
 # POST
