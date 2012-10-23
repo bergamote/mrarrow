@@ -297,10 +297,10 @@ class Blog {
     while ($i <= $pages) {
       $this->title = $title;
       $prev = '<a href="page'.($i+1).'.html">&larr; prev</a> ';
-      $next = '<a href="page'.($i-1).'.html">&rarr; next</a> '; 
+      $next = '<a href="page'.($i-1).'.html">next &rarr;</a> '; 
       $path = $dest_path.'/page'.$i.'.html';
       if ($i == 2) {
-        $next = '<a href="index.html">&rarr; next</a> ';
+        $next = '<a href="index.html">next &rarr;</a> ';
       }
       if ($i == $pages) {
         $prev = '';
@@ -313,7 +313,7 @@ class Blog {
       }
       $cur_page = array_splice($this->posts, 0, MAX_POSTS);
       $this->content = $this->makeBlogRoll($cur_page);
-      $this->content .= ($pages != 1)?PHP_EOL.'<nav id="blog_roll">'.$prev.$next.'</nav>'.PHP_EOL:'';
+      $this->content .= ($pages != 1)?PHP_EOL.'<nav class="blog_nav">'.$prev.$next.'</nav>'.PHP_EOL:'';
       ob_start();
         include THEME.'default.php';
         file_put_contents($path, ob_get_contents());

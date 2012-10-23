@@ -185,6 +185,10 @@ article {
 	/*padding:1em;*/
 }
 
+nav.blog_nav {
+  text-align:center;
+}
+
 footer {
 	font-size: 0.8em;
 	background-color:#fff;
