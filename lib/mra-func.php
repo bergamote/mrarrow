@@ -103,7 +103,7 @@ function catComp($ext, $yui) {
 	exec("ls $pathIn*.$ext 2>&1 1> /dev/null", $output, $ret_val);
 	if($ret_val == 0) {
 		exec("cat $pathIn*.$ext > $pathOut/$filename");
-		echo "....$ext";
+		echo ".$ext".PHP_EOL;
 		if ($yui != 'off') {
 		  exec("cp $pathOut/$filename $pathOut/tmp-$filename");
 		  exec("yui-compressor $pathOut/tmp-$filename > $pathOut/$filename");

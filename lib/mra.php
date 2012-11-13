@@ -23,7 +23,7 @@ $default_site = array (
   'content_dir' => 'content',
   'export_dir' => 'export',
   'lib_dir' => 'lib',
-  'max_posts'=> 2);
+  'max_posts'=> 6);
 //------------------------- store site.conf settings into $site array
 $site = array();
 $conf_file = getcwd()."/site.conf";
@@ -67,7 +67,7 @@ if(exec("find ".getcwd()."/".CONTENT.' -type f  | egrep -v ".txt|.md|.markdown"'
 		$cpfiles = substr_replace($cpfiles, "", 0, ( strlen(getcwd()) +1) );
 }
 if(!empty($cpfiles)) {
-  echo "Copy files (if modified):".PHP_EOL;
+  echo "Copy files";
   foreach ($cpfiles as $v) {
     $file_part = pathinfo($v);		
     $dest_path = str_replace(CONTENT, "", $file_part['dirname']);	
@@ -75,8 +75,9 @@ if(!empty($cpfiles)) {
     $dest_path = stripNumPath($dest_path, true);
     $dest_path = EXPORT.$dest_path.$file_part['basename'];
     exec('cp -fu --preserve=timestamps '.escapeshellarg($v).' '.$dest_path);
-    echo "  $v -> $dest_path".PHP_EOL;		
+    echo '.';
   }
+  echo 'done'.PHP_EOL;
 }
 //------------------------- Make the site's tree
 if(exec("find ".getcwd()."/".CONTENT.' | egrep ".txt|.md|.markdown"' , $files)){

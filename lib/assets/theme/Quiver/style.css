@@ -146,6 +146,7 @@ nav#main ul li {
   position:relative;
   margin-left:0.6em;
   padding:0em 0.2em 0 0.2em;
+
 }
 nav#main > ul > li:hover,
 nav#main ul li.sel {
@@ -169,14 +170,22 @@ nav#main ul li ul {
 	top:1em;
 	left:0;
 	text-align:left;
-  background-color: #fafafa;
   padding:0.2em;
   box-shadow: 0 0.13em 0.11em 0 #aaa;
+  background-color:#efefef;
+  z-index:10;
 
 }
 nav#main ul li ul li {
   margin-left:0;
   margin-top:0.2em;
+  white-space:nowrap;
+  display:block;
+
+}
+nav#main ul li ul li ul {
+  background-color:#dfdfdf;
+    margin-left:1.2em;
 }
 
 article {
