@@ -229,6 +229,12 @@ class Page {
     }
     $dest_path = get_folder($this->path);
     $this->rel = findRel(sane($dest_path));
+    $this->menu_li = makeMenuLi($this->rel, $this->title);
+
+    $dest_path = sane($dest_path.'/'.$this->title);
+    $dest_path = stripNumPath($dest_path, true);
+    $dest_path = EXPORT.'/'.$dest_path;
+    
     $this->content = "<article>";
     if (is_blog($this->title)) {
       $post = new Post;
@@ -236,17 +242,30 @@ class Page {
 			$post->title = $this->title;
 			$this->content .= $post->makePost();
     } else {
-    $data = file_get_contents($this->path);		
-    $this->content .= Markdown($data); 
+      $data = file_get_contents($this->path);
+      
+      //	Parse the header if present
+      if (substr($data, 0, 3) == "---") {
+	      $parts = preg_split('/[\n]*[-]{3}[\n]/', $data, 3);
+	      $inforaw = explode("\n", $parts[1]);
+	      foreach ($inforaw as $set_line) {
+	      echo "    # ";
+	        if(strpos($set_line, '=') == strrpos($set_line, '=')) {
+		        $pair = explode('=', $set_line);
+		        $key = trim($pair[0]); echo $key." = ";
+		        $this->$key = trim($pair[1]); echo $this->$key.PHP_EOL;
+		      }
+		      else {
+		        echo 'error in header of '.$this->title.PHP_EOL;
+		      };
+	      };
+	    $data = $parts[2];
+      } 
+            
+      $this->content .= Markdown($data); 
     }
     $this->content .= "</article>";
 
-    $this->menu_li = makeMenuLi($this->rel, $this->title);
-
-    $dest_path = sane($dest_path.'/'.$this->title);
-    $dest_path = stripNumPath($dest_path, true);
-    
-    $dest_path = EXPORT.'/'.$dest_path;
     exec("mkdir -p ".escapeshellarg($dest_path));
     $dest_path .= "/index.html";
 
