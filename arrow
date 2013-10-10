@@ -5,20 +5,27 @@ if (!isset($argv[1])){
 	exit(0);
 } else {
 	switch($argv[1]) {
-		case "new": passthru('php ./lib/mra-new.php'); break;
-		case "upload": echo "upload site to remote directory"; break;
+		case "new":
+		case "-n":
+		  passthru('php ./lib/mra-new.php');
+		break;
+		case "upload":
+		case "-u":
+		  echo "Not working yet: upload site to remote directory";
+		break;
 		case "widget":
+		case "-w":
 			echo "Start widget".PHP_EOL;
 			passthru('./lib/mra-widget');
-			break;
+		break;
 		default:
 echo <<<EOD
 Invalid command: $argv[1]
 Usage: ./arrow [command]
 ./arrow           Build the website to the export folder.
-        new       Create a site.conf file and the default folders.
-        widget    Start the update widget.
-        upload    Run an update and upload the result to a remote folder.
+     -n   new       Create a site.conf file and the default folders.
+     -w   widget    Start the update widget.
+     -u   upload    *Feature not implemented*
 
 EOD;
 	}
